@@ -3,6 +3,7 @@ import subprocess
 from typing import Generator
 import pytest
 from helpers import SERVER_BIN, CERTS_DIR
+import pathlib
 
 @pytest.fixture(scope="session")
 def server_daemon(tmp_path_factory: pytest.TempPathFactory) -> Generator[str, None, None]:
@@ -23,7 +24,7 @@ def server_daemon(tmp_path_factory: pytest.TempPathFactory) -> Generator[str, No
     server_proc.wait()
 
 @pytest.fixture
-def base_script(tmp_path: pytest.TempPath) -> str:
+def base_script(tmp_path: pathlib.Path) -> str:
     """Provides a basic valid bash script for testing in an isolated temp directory."""
     script_path: str = str(tmp_path / "base.sh")
     with open(script_path, "w") as f:
