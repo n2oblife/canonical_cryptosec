@@ -1,5 +1,7 @@
 import pytest
 from helpers import sign_payload, send_to_server
+import pathlib
+
 
 def test_valid_script_execution(server_daemon: str, base_script: str, tmp_path: pathlib.Path) -> None:
     """A script signed by a valid code-signing cert must be APPROVED and executed."""

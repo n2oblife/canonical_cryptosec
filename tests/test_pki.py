@@ -4,6 +4,8 @@ import subprocess
 import pytest
 import datetime
 from helpers import sign_payload, send_to_server
+import pathlib
+
 
 # --- Existing Core PKI Tests ---
 

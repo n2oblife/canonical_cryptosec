@@ -1,6 +1,8 @@
 import pytest
 import base64
 from helpers import sign_payload, send_to_server
+import pathlib
+
 
 def test_tampered_script_rejection(server_daemon: str, base_script: str, tmp_path: pathlib.Path) -> None:
     """A validly signed script whose payload is subsequently modified must be REJECTED."""

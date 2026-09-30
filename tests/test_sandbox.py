@@ -4,6 +4,8 @@ import subprocess
 import time
 from concurrent.futures import ThreadPoolExecutor
 from helpers import sign_payload, send_to_server, SERVER_BIN, CERTS_DIR
+import pathlib
+
 
 def test_dos_protection_payload_size(server_daemon: str) -> None:
     """Payloads exceeding the MAX_PAYLOAD_SIZE must be dropped/rejected."""
