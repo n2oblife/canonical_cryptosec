@@ -1,7 +1,7 @@
 import pytest
 from helpers import sign_payload, send_to_server
 
-def test_valid_script_execution(server_daemon: str, base_script: str, tmp_path: pytest.TempPath) -> None:
+def test_valid_script_execution(server_daemon: str, base_script: str, tmp_path: pathlib.Path) -> None:
     """A script signed by a valid code-signing cert must be APPROVED and executed."""
     signed_script: str = str(tmp_path / "t1_signed.sh")
     sign_payload("valid_codesign.key", base_script, signed_script)
@@ -14,7 +14,7 @@ def test_valid_script_execution(server_daemon: str, base_script: str, tmp_path: 
     assert "Hello from the secure sandbox" in response
     assert "EXIT CODE: 0" in response
 
-def test_stderr_and_nonzero_exit(server_daemon: str, tmp_path: pytest.TempPath) -> None:
+def test_stderr_and_nonzero_exit(server_daemon: str, tmp_path: pathlib.Path) -> None:
     """The sandbox must correctly capture STDERR and return non-zero exit codes."""
     script_path: str = str(tmp_path / "t9.sh")
     with open(script_path, "w") as f:
@@ -30,7 +30,7 @@ def test_stderr_and_nonzero_exit(server_daemon: str, tmp_path: pytest.TempPath) 
     assert "Critical failure simulated" in response
     assert "EXIT CODE: 42" in response
 
-def test_empty_payload_handling(server_daemon: str, tmp_path: pytest.TempPath) -> None:
+def test_empty_payload_handling(server_daemon: str, tmp_path: pathlib.Path) -> None:
     """A script containing ONLY a valid signature and no actual bash code must not crash."""
     script_path: str = str(tmp_path / "t11.sh")
     with open(script_path, "w") as f:
@@ -45,7 +45,7 @@ def test_empty_payload_handling(server_daemon: str, tmp_path: pytest.TempPath) -
     assert "STATUS: APPROVED" in response
     assert "EXIT CODE: 0" in response
 
-def test_large_output_pipe_deadlock(server_daemon: str, tmp_path: pytest.TempPath) -> None:
+def test_large_output_pipe_deadlock(server_daemon: str, tmp_path: pathlib.Path) -> None:
     """A script generating massive output must not deadlock the IPC pipes."""
     script_path: str = str(tmp_path / "t12.sh")
     with open(script_path, "w") as f:
@@ -64,7 +64,7 @@ def test_large_output_pipe_deadlock(server_daemon: str, tmp_path: pytest.TempPat
     # Verify the output wasn't truncated by counting the expected lines
     assert response.count("This is a long line") == 2000
 
-def test_bash_syntax_error(server_daemon: str, tmp_path: pytest.TempPath) -> None:
+def test_bash_syntax_error(server_daemon: str, tmp_path: pathlib.Path) -> None:
     """A cryptographically valid script with invalid Bash syntax must fail gracefully."""
     script_path: str = str(tmp_path / "t13.sh")
     with open(script_path, "w") as f:
@@ -82,7 +82,7 @@ def test_bash_syntax_error(server_daemon: str, tmp_path: pytest.TempPath) -> Non
     # Bash syntax errors exit with code 2
     assert "EXIT CODE: 2" in response
 
-def test_background_process_reaping(server_daemon: str, tmp_path: pytest.TempPath) -> None:
+def test_background_process_reaping(server_daemon: str, tmp_path: pathlib.Path) -> None:
     """A script that spawns a background process must not hang the executor's waitpid()."""
     script_path: str = str(tmp_path / "t14.sh")
     with open(script_path, "w") as f:

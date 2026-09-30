@@ -7,7 +7,7 @@ from helpers import sign_payload, send_to_server
 
 # --- Existing Core PKI Tests ---
 
-def test_missing_eku_rejection(server_daemon: str, base_script: str, tmp_path: pytest.TempPath) -> None:
+def test_missing_eku_rejection(server_daemon: str, base_script: str, tmp_path: pathlib.Path) -> None:
     """A signature from a trusted CA that lacks the codeSigning EKU must be REJECTED."""
     signed_script: str = str(tmp_path / "t3_signed.sh")
     sign_payload("invalid_no_eku.key", base_script, signed_script)
@@ -18,7 +18,7 @@ def test_missing_eku_rejection(server_daemon: str, base_script: str, tmp_path: p
     assert "STATUS: REJECTED" in response
     assert "verification failed" in response
 
-def test_untrusted_cert_rejection(server_daemon: str, base_script: str, tmp_path: pytest.TempPath) -> None:
+def test_untrusted_cert_rejection(server_daemon: str, base_script: str, tmp_path: pathlib.Path) -> None:
     """A signature from a self-signed cert not in the trusted store must be REJECTED."""
     signed_script: str = str(tmp_path / "t4_signed.sh")
     sign_payload("untrusted.key", base_script, signed_script)
@@ -31,7 +31,7 @@ def test_untrusted_cert_rejection(server_daemon: str, base_script: str, tmp_path
 
 # --- Advanced Cryptographic Boundary & Policy Tests ---
 
-def generate_custom_signature(key_type: str, hash_algo: str, script_in: str, script_out: str, tmp_path: pytest.TempPath) -> None:
+def generate_custom_signature(key_type: str, hash_algo: str, script_in: str, script_out: str, tmp_path: pathlib.Path) -> None:
     """Helper to dynamically generate adversarial keys and signatures on the fly."""
     key_path: str = str(tmp_path / f"temp_{key_type}.key")
     
@@ -52,7 +52,7 @@ def generate_custom_signature(key_type: str, hash_algo: str, script_in: str, scr
             f.write(orig.read())
 
 
-def test_unauthorized_but_valid_ecdsa_key(server_daemon: str, base_script: str, tmp_path: pytest.TempPath) -> None:
+def test_unauthorized_but_valid_ecdsa_key(server_daemon: str, base_script: str, tmp_path: pathlib.Path) -> None:
     """A signature that is mathematically valid ECDSA, but whose key is NOT in the X.509 store, must be REJECTED."""
     signed_script: str = str(tmp_path / "rogue_ecdsa_signed.sh")
     
@@ -64,7 +64,7 @@ def test_unauthorized_but_valid_ecdsa_key(server_daemon: str, base_script: str, 
         
     assert "STATUS: REJECTED" in response
 
-def test_algorithm_confusion_rsa_signature(server_daemon: str, base_script: str, tmp_path: pytest.TempPath) -> None:
+def test_algorithm_confusion_rsa_signature(server_daemon: str, base_script: str, tmp_path: pathlib.Path) -> None:
     """An attacker signing with RSA instead of ECDSA must be gracefully REJECTED by OpenSSL EVP."""
     signed_script: str = str(tmp_path / "rsa_signed.sh")
     
@@ -77,7 +77,7 @@ def test_algorithm_confusion_rsa_signature(server_daemon: str, base_script: str,
     # Proves EVP_DigestVerify doesn't crash when comparing an RSA signature against an ECDSA public key
     assert "STATUS: REJECTED" in response
 
-def test_hash_downgrade_attack_sha1(server_daemon: str, base_script: str, tmp_path: pytest.TempPath) -> None:
+def test_hash_downgrade_attack_sha1(server_daemon: str, base_script: str, tmp_path: pathlib.Path) -> None:
     """A FIPS 140-3 system must REJECT deprecated hash algorithms like SHA-1."""
     signed_script: str = str(tmp_path / "sha1_signed.sh")
     
@@ -92,7 +92,7 @@ def test_hash_downgrade_attack_sha1(server_daemon: str, base_script: str, tmp_pa
     assert "STATUS: REJECTED" in response
 
 
-def test_startup_cert_time_validations(tmp_path: pytest.TempPath) -> None:
+def test_startup_cert_time_validations(tmp_path: pathlib.Path) -> None:
     """The server must reject expired and not-yet-valid certificates at startup."""
     
     # We use pytest.importorskip to ensure the test fails gracefully if the library is missing
@@ -144,7 +144,7 @@ def generate_time_shifted_cert(filename: str, days_offset_start: int, days_offse
     assert "No valid code-signing certificates found" in result.stderr
 
 
-def test_server_startup_invalid_directories(tmp_path: pytest.TempPath) -> None:
+def test_server_startup_invalid_directories(tmp_path: pathlib.Path) -> None:
     """T15: The server must refuse to start if the cert directory is missing or empty."""
     from helpers import SERVER_BIN
     uds_path: str = str(tmp_path / "dummy.sock")

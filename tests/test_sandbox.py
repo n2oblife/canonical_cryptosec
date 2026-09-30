@@ -13,7 +13,7 @@ def test_dos_protection_payload_size(server_daemon: str) -> None:
     response: str = send_to_server(dos_payload, server_daemon)
     assert "STATUS: APPROVED" not in response
 
-def test_concurrent_requests(server_daemon: str, base_script: str, tmp_path: pytest.TempPath) -> None:
+def test_concurrent_requests(server_daemon: str, base_script: str, tmp_path: pathlib.Path) -> None:
     """The daemon must correctly handle multiple concurrent execution requests."""
     signed_script: str = str(tmp_path / "t8_signed.sh")
     sign_payload("valid_codesign.key", base_script, signed_script)
@@ -30,7 +30,7 @@ def test_concurrent_requests(server_daemon: str, base_script: str, tmp_path: pyt
             assert "STATUS: APPROVED" in response
             assert "Hello from the secure sandbox" in response
 
-def test_environment_sanitization(server_daemon: str, tmp_path: pytest.TempPath) -> None:
+def test_environment_sanitization(server_daemon: str, tmp_path: pathlib.Path) -> None:
     """The sandbox must wipe all malicious environment variables and restrict PATH."""
     script_path: str = str(tmp_path / "t10.sh")
     with open(script_path, "w") as f:
@@ -50,7 +50,7 @@ def test_environment_sanitization(server_daemon: str, tmp_path: pytest.TempPath)
     assert "SECRET IS \n" in response # The variable should be completely empty
 
 
-def test_cpu_timeout_enforcement(server_daemon: str, tmp_path: pytest.TempPath) -> None:
+def test_cpu_timeout_enforcement(server_daemon: str, tmp_path: pathlib.Path) -> None:
     """A script attempting an infinite CPU loop must be killed by the kernel via RLIMIT_CPU."""
     script_path: str = str(tmp_path / "cpu_hog.sh")
     with open(script_path, "w") as f:
@@ -72,7 +72,7 @@ def test_cpu_timeout_enforcement(server_daemon: str, tmp_path: pytest.TempPath) 
     # WIFEXITED(status) evaluates to false, which we mapped to -1.
     assert "EXIT CODE: -1" in response
 
-def test_memory_exhaustion_enforcement(server_daemon: str, tmp_path: pytest.TempPath) -> None:
+def test_memory_exhaustion_enforcement(server_daemon: str, tmp_path: pathlib.Path) -> None:
     """A script attempting to allocate massive memory must be killed by RLIMIT_AS."""
     script_path: str = str(tmp_path / "mem_hog.sh")
     with open(script_path, "w") as f:

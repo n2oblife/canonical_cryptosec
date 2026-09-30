@@ -2,7 +2,7 @@ import pytest
 import base64
 from helpers import sign_payload, send_to_server
 
-def test_tampered_script_rejection(server_daemon: str, base_script: str, tmp_path: pytest.TempPath) -> None:
+def test_tampered_script_rejection(server_daemon: str, base_script: str, tmp_path: pathlib.Path) -> None:
     """A validly signed script whose payload is subsequently modified must be REJECTED."""
     signed_script: str = str(tmp_path / "t2_signed.sh")
     sign_payload("valid_codesign.key", base_script, signed_script)
@@ -48,7 +48,7 @@ def test_garbage_asn1_signature(server_daemon: str) -> None:
     assert "STATUS: REJECTED" in response
     assert "Cryptographic signature verification failed" in response
 
-def test_crlf_line_endings(server_daemon: str, base_script: str, tmp_path: pytest.TempPath) -> None:
+def test_crlf_line_endings(server_daemon: str, base_script: str, tmp_path: pathlib.Path) -> None:
     """A script signed on Linux but saved on Windows (CRLF endings) must still verify and be APPROVED."""
     signed_script: str = str(tmp_path / "crlf_signed.sh")
     sign_payload("valid_codesign.key", base_script, signed_script)
@@ -64,7 +64,7 @@ def test_crlf_line_endings(server_daemon: str, base_script: str, tmp_path: pytes
     assert "STATUS: APPROVED" in response
     assert "EXIT CODE: 0" in response
 
-def test_signature_swapping_attack(server_daemon: str, tmp_path: pytest.TempPath) -> None:
+def test_signature_swapping_attack(server_daemon: str, tmp_path: pathlib.Path) -> None:
     """A valid signature for Script A blindly attached to Script B must be REJECTED."""
     script_a: str = str(tmp_path / "script_a.sh")
     script_b: str = str(tmp_path / "script_b.sh")
