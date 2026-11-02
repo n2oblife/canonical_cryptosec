@@ -1,4 +1,4 @@
-# Chapter 8: Software architecture & engineering interview (Paul Goins)
+# Chapter 8: Software architecture & engineering interview (Paul)
 
 ## 8.1 Read the interviewer
 - **Senior Reliability Engineer**, Canonical Managed Solutions (ex-BootStack) since 2019: runs
