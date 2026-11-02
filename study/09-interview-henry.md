@@ -1,4 +1,4 @@
-# Chapter 9: Technical skills interview (Henry Coggill, Security Certifications & Hardening)
+# Chapter 9: Technical skills interview (Henry, Security Certifications & Hardening)
 
 ## 9.1 Read the interviewer
 - Works on **security certifications and hardening** at Canonical. That's the team you'd join, so
