@@ -24,11 +24,12 @@ volatile sig_atomic_t keep_running = 1;
  * Signal Handlers
  * -------------------------------------------------------------------------- */
 static void sigchld_handler(int s) {
-    (void)s;
-    int saved_errno = errno;
-    while (waitpid(-1, NULL, WNOHANG) > 0);
+    (void)s;                               // silence -Wunused-parameter (needed with -Werror)
+    int saved_errno = errno;               // handlers must preserve errno: the interrupted code may be about to read it
+    while (waitpid(-1, NULL, WNOHANG) > 0);// reap ALL finished children; signals coalesce, so one SIGCHLD may mean N exits
     errno = saved_errno;
 }
+
 
 /* Handler for SIGTERM/SIGINT to gracefully stop the daemon */
 static void sigterm_handler(int s) {
@@ -38,10 +39,10 @@ static void sigterm_handler(int s) {
 
 static void setup_signals() {
     /* 1. SIGCHLD (Reap zombies, restart interrupted syscalls) */
-    struct sigaction sa_chld;
+    struct sigaction sa_chld;                 // not zero-initialised; use = {0} or memset
     sa_chld.sa_handler = sigchld_handler;
-    sigemptyset(&sa_chld.sa_mask);
-    sa_chld.sa_flags = SA_RESTART;
+    sigemptyset(&sa_chld.sa_mask);            // don't block extra signals while the handler runs
+    sa_chld.sa_flags = SA_RESTART;            // syscalls interrupted by SIGCHLD (accept) auto-restart
     if (sigaction(SIGCHLD, &sa_chld, NULL) == -1) {
         perror("[-] sigaction(SIGCHLD) failed");    // LCOV_EXCL_LINE
         exit(EXIT_FAILURE);                         // LCOV_EXCL_LINE
@@ -72,10 +73,10 @@ static int create_listener(const server_config_t *config) {
         struct sockaddr_un addr;
         memset(&addr, 0, sizeof(addr));
         addr.sun_family = AF_UNIX;
-        strncpy(addr.sun_path, config->uds_path, sizeof(addr.sun_path) - 1);
+        strncpy(addr.sun_path, config->uds_path, sizeof(addr.sun_path) - 1);   // silent truncation at 107 chars
 
         /* Remove any existing socket file at the path */
-        unlink(config->uds_path);
+        unlink(config->uds_path);                                              // remove stale socket from previous run
 
         if (bind(sockfd, (struct sockaddr*)&addr, sizeof(addr)) < 0) return -1; // LCOV_EXCL_LINE
         fprintf(stdout, "[*] Bound to UNIX Domain Socket: %s\n", config->uds_path);
@@ -99,7 +100,7 @@ static int create_listener(const server_config_t *config) {
     }
 
     /* Queue up to 10 incoming connection requests */
-    if (listen(sockfd, 10) < 0) return -1;
+    if (listen(sockfd, 10) < 0) return -1;   // backlog: completed connections waiting for accept()
     return sockfd;
 }
 
@@ -186,10 +187,10 @@ static void handle_client(int client_fd, crypto_ctx_t *crypto_ctx) {
 
 cleanup:
     /* Securely wipe the script and memory buffers before releasing */
-    OPENSSL_cleanse(buffer, MAX_PAYLOAD_SIZE + 1);
-    free(buffer);
-    close(client_fd);
-    exit(EXIT_SUCCESS);
+    OPENSSL_cleanse(buffer, MAX_PAYLOAD_SIZE + 1);   // compiler-proof memset (won't be optimised away)
+    free(buffer); close(client_fd);
+    exit(EXIT_SUCCESS);                              // should be _exit() in a forked child
+
 }
 
 /* --------------------------------------------------------------------------
@@ -251,14 +252,16 @@ int main(int argc, char *argv[]) {
         if (pid == 0) {
             /* Child process context */
             close(server_fd); /* Child does not need the listener socket */
+            // least priviliege: handler can't accept other
             
             /* Add this line: Let executor.c handle waitpid() synchronously */
             signal(SIGCHLD, SIG_DFL); 
             
-            handle_client(client_fd, ctx);
+            handle_client(client_fd, ctx); // never returns (exit inside)
         } else if (pid > 0) {
             /* Parent process context */
             close(client_fd); /* Parent hands off the connection to the child */
+            // parent must close its copy, otherwise EOF never reaches the client and fds leaks
         } else {
             perror("[-] fork() failed, cannot handle client"); // LCOV_EXCL_LINE
             close(client_fd);                                  // LCOV_EXCL_LINE
@@ -266,7 +269,7 @@ int main(int argc, char *argv[]) {
     }
 
     /* Unreachable in this daemon structure, but here for completeness */
-    crypto_cleanup(ctx);
+    crypto_cleanup(ctx); // it was designed unreachable, though it is via SIGTERM
     close(server_fd);
     return 0;
 }

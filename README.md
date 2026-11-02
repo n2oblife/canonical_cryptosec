@@ -52,9 +52,6 @@ make prod
 
 The compiled binary will be located at `build/bin/crypto_server`.
 
-Here is the expanded section for your `README.md`. It seamlessly bridges starting the server with how to interact with it, highlighting your custom CLI tooling while preserving the underlying manual commands for transparency.
-
-Replace your current **Running the Server** section with the following:
 
 ## Running the Server
 

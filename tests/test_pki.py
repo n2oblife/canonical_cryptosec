@@ -96,7 +96,7 @@ def test_hash_downgrade_attack_sha1(server_daemon: str, base_script: str, tmp_pa
 
 def test_startup_cert_time_validations(tmp_path: pathlib.Path) -> None:
     """The server must reject expired and not-yet-valid certificates at startup."""
-    
+
     # We use pytest.importorskip to ensure the test fails gracefully if the library is missing
     cryptography = pytest.importorskip("cryptography")
     from cryptography import x509
